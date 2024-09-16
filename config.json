@@ -1,0 +1,36 @@
+{
+  "parse_zapros": false,
+  "parse_email": true,
+  "parse_login": true,
+  "parse_number": true,
+  "parse_full": false,
+  "use_regex": true,
+  "check_length": true,
+  "default_length": [
+    5,
+    35
+  ],
+  "all_length": [
+    20,
+    150
+  ],
+  "email_length": [
+    8,
+    35
+  ],
+  "login_length": [
+    5,
+    35
+  ],
+  "number_length": [
+    11,
+    16
+  ],
+  "password_length": [
+    8,
+    35
+  ],
+  "autothreads": true,
+  "threads": 4,
+  "count_line_in_buffer": 500000
+}
