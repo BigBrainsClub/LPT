@@ -1,3 +1,4 @@
+use std::io::stdin;
 use std::path::Path;
 
 use regex::Regex;
@@ -43,4 +44,5 @@ fn main() {
         None => panic!("Путь {} не найден", path_work.display())
     }
     println!("all count find - {}\nbad words - {}\nlength all - {}\nlength credit - {}\nnot ulp - {}\nregex error - {}\n", main_result.total_count, main_result.bad_word, main_result.length_all, main_result.length_credit, main_result.not_ulp, main_result.regex_error);
+    stdin().read_line(&mut String::new()).unwrap();
 }
