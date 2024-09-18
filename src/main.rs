@@ -1,5 +1,6 @@
 use std::io::stdin;
 use std::path::Path;
+use std::time::Instant;
 
 use regex::Regex;
 use urllogpass::config::Config;
@@ -28,6 +29,7 @@ fn main() {
     let paths = loader_paths::load_files_in_path(&path_work);
 
     let mut main_result = ThreadResult::new();
+    let start = Instant::now();
 
     match paths {
         Some(paths) => {
@@ -43,6 +45,8 @@ fn main() {
         },
         None => panic!("Путь {} не найден", path_work.display())
     }
-    println!("all count find - {}\nbad words - {}\nlength all - {}\nlength credit - {}\nnot ulp - {}\nregex error - {}\n", main_result.total_count, main_result.bad_word, main_result.length_all, main_result.length_credit, main_result.not_ulp, main_result.regex_error);
+    let duration = start.elapsed();
+    println!("Время выполнения: {:?}", duration);
+    println!("Всего найдено - {}\nСтрок которые не прошли по фильтру - {}\nСтрок не прошедших по общей длине - {}\nСтрок которые не прошли по длине логина/пароля - {}\nСтрок которые не в формате url:login:password - {}\nСтрок которые не прошли по регулярному выражению - {}\n", main_result.total_count, main_result.bad_word, main_result.length_all, main_result.length_credit, main_result.not_ulp, main_result.regex_error);
     stdin().read_line(&mut String::new()).unwrap();
 }
