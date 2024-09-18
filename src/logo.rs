@@ -16,7 +16,7 @@ impl Logo {
         let logo = Logo {
             version: "1.0.0",
             telegram: "@M0l0d0st_vnutri",
-            forum: "https://zelenka.guru/members/3060240",
+            forum: "https://lolz.live/members/3060240",
             github: "https://github.com/M0l0d0st",
             thread: "https://lolz.live/threads/5830632/"
         };
@@ -28,7 +28,7 @@ impl Logo {
 ███████╗╚█████╔╝███████╗███████╗░░░██║░░░███████╗██║░░██║██║░╚═╝░██║
 ╚══════╝░╚════╝░╚══════╝╚══════╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝╚═╝░░░░░╚═╝
         ".green();
-        let info = format!("        Сделал molodost vnutri для форума zelenka.guru
+        let info = format!("        Сделал molodost vnutri для форума lolz.live
         Контакты и ссылки для фидбека:
              [{}]=> {}
              [{}]=> {}
