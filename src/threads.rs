@@ -94,7 +94,14 @@ fn split_data(
                                                .filter(|v| !used_strings.contains(v))
                                                .collect();
         let total_values = unique_values.len();
-        let chunk_size = (total_values + threads - 1) / threads;
+        
+        let threads = threads.min(total_values);
+
+        let chunk_size = if threads > 0 {
+            (total_values + threads - 1) / threads
+        } else {
+            1
+        };
 
         for (i, chunk) in unique_values.chunks(chunk_size).enumerate() {
             let thread_map = result.get_mut(i).unwrap();
