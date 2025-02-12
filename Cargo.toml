@@ -17,3 +17,11 @@ smallvec = "1.13.2"
 mimalloc = { version = "0.1", default-features = false }
 maplit = "1.0"
 indicatif = "0.17.11"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+overflow-checks = false
+debug = false
+strip = true
