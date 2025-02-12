@@ -1,2 +1,2 @@
-zapros_one
-zapros_two
+zapros
+zapros1

@@ -1,36 +1,46 @@
-use std::{collections::HashMap, fs::OpenOptions, io::Write, path::PathBuf};
+use std::{
+    collections::HashMap,
+    fs::{File, OpenOptions},
+    io::{BufWriter, Write}
+};
 
-use crate::schemes::TextValidator;
+use crate::{config::Config, text::TextValidator, CURRENT_DIR, END_FILES_ALL_PARSE};
 
+pub struct Writer {
+    bufwriters: HashMap<String, BufWriter<File>>,
+}
 
-pub fn write_result(path: &PathBuf, result: &HashMap<String, Vec<TextValidator>>, write_full: bool) -> usize {
-    let mut count: usize = 0;
-    for (key, value) in result {
-        if !value.is_empty() {
-            count += value.len();
-            if write_full {
-                match OpenOptions::new().create(true).write(true).append(true).open(path.join(&format!("{}_full.txt", key))) {
-                    Ok(mut body) => {
-                        for classbody in value {
-                            if let Err(e) = body.write(format!("{}\n", classbody.urllogpass()).as_bytes()) {
-                                println!("Ошибка при записи в файл: {}", e)
-                            }
-                        }
-                    },
-                    Err(e) => println!("Ошибка при записи в файл: {}", e)
+impl Writer {
+    pub fn new() -> Self {
+        Self { bufwriters: HashMap::new() }
+    }
+    fn check_exist(&mut self, key: &str, line: &[u8]) -> std::io::Result<()> {
+        let writer = self.bufwriters.entry(key.to_string()).or_insert_with(|| {
+            let file_path = CURRENT_DIR.join(key);
+            let file = OpenOptions::new()
+                .write(true)
+                .create(true)
+                .append(true)
+                .open(file_path)
+                .expect("Failed to open file");
+            BufWriter::new(file)
+        });
+
+        writer.write_all(line)?;
+        writer.write_all(b"\n")?;
+        Ok(())
+    }
+
+    pub fn write(&mut self, result: &HashMap<String, Vec<TextValidator>>, config: &Config) -> std::io::Result<()> {
+        for (key, value) in result {
+            for line in value {
+                if config.parse_full {
+                    self.check_exist(&format!("{key}_{}", END_FILES_ALL_PARSE), &line.full_line())?;
                 }
-            }
-            match OpenOptions::new().create(true).write(true).append(true).open(path.join(&format!("{}.txt", key))) {
-                Ok(mut body) => {
-                    for classbody in value {
-                        if let Err(e) = body.write(format!("{}\n", classbody.credits()).as_bytes()) {
-                            println!("Ошибка при записи в файл: {}", e)
-                        }
-                    }
-                },
-                Err(e) => println!("Ошибка при записи в файл: {}", e)
+                self.check_exist(&format!("{key}_{}", line.datatype), &line.credits())?;
             }
         }
+
+        Ok(())
     }
-    count
 }

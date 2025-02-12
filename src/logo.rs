@@ -1,51 +1,40 @@
+use std::sync::LazyLock;
 use colored::Colorize;
 
-use crate::system::clear_screen;
+use crate::{VERSION, TELEGRAM, THREAD, FORUM, GITHUB};
 
-pub struct Logo {
-    version: &'static str,
-    telegram: &'static str,
-    forum: &'static str,
-    github: &'static str,
-    thread: &'static str
-}
+static LOGO_PRINT: LazyLock<String> = LazyLock::new(|| {
+    concat!(
+      "\n██╗░░░░░░█████╗░██╗░░░░░███████╗████████╗███████╗░█████╗░███╗░░░███╗\n",
+        "██║░░░░░██╔══██╗██║░░░░░╚════██║╚══██╔══╝██╔════╝██╔══██╗████╗░████║\n",
+        "██║░░░░░██║░░██║██║░░░░░░░███╔═╝░░░██║░░░█████╗░░███████║██╔████╔██║\n",
+        "██║░░░░░██║░░██║██║░░░░░██╔══╝░░░░░██║░░░██╔══╝░░██╔══██║██║╚██╔╝██║\n",
+        "███████╗╚█████╔╝███████╗███████╗░░░██║░░░███████╗██║░░██║██║░╚═╝░██║\n",
+        "╚══════╝░╚════╝░╚══════╝╚══════╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝╚═╝░░░░░╚═╝\n"
+    )
+    .green()
+    .to_string()
+});
 
-impl Logo {
-    pub fn logo() {
-        clear_screen();
-        let logo = Logo {
-            version: "1.0.0",
-            telegram: "@M0l0d0st_vnutri",
-            forum: "https://lolz.live/members/3060240",
-            github: "https://github.com/M0l0d0st",
-            thread: "https://lolz.live/threads/5830632/"
-        };
-        let body = "
-██╗░░░░░░█████╗░██╗░░░░░███████╗████████╗███████╗░█████╗░███╗░░░███╗
-██║░░░░░██╔══██╗██║░░░░░╚════██║╚══██╔══╝██╔════╝██╔══██╗████╗░████║
-██║░░░░░██║░░██║██║░░░░░░░███╔═╝░░░██║░░░█████╗░░███████║██╔████╔██║
-██║░░░░░██║░░██║██║░░░░░██╔══╝░░░░░██║░░░██╔══╝░░██╔══██║██║╚██╔╝██║
-███████╗╚█████╔╝███████╗███████╗░░░██║░░░███████╗██║░░██║██║░╚═╝░██║
-╚══════╝░╚════╝░╚══════╝╚══════╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝╚═╝░░░░░╚═╝
-        ".green();
-        let info = format!("        Сделал molodost vnutri для форума lolz.live
-        Контакты и ссылки для фидбека:
-             [{}]=> {}
-             [{}]=> {}
-             [{}]=> {}
-             [{}]=> {}
-        {}: {}\n\n",
-        "telegram".bright_blue(),
-        logo.telegram,
-        "Ссылка на профиль".green(),
-        logo.forum,
-        "Тема на форуме".green(),
-        logo.thread,
-        "Github".bright_black(),
-        logo.github,
-        "Версия".bright_green(),
-        logo.version
-    );
-    print!("{}\n{}", body, info);
-    }
+static INFORMATION: LazyLock<String> = LazyLock::new(|| {
+    format!(
+        "Сделал molodost vnutri для форума lolz.live\n\
+         Контакты и ссылки для фидбека:\n\
+         \n\
+         \t[{}] => {}\n\
+         \t[{}] => {}\n\
+         \t[{}] => {}\n\
+         \t[{}] => {}\n\
+         \n\
+         {}: {}\n",
+        "telegram".bright_blue(), TELEGRAM,
+        "Ссылка на профиль".green(), FORUM,
+        "Тема на форуме".green(), THREAD,
+        "Github".bright_black(), GITHUB,
+        "Версия".bright_green(), VERSION
+    )
+});
+
+pub fn print_logo() {
+    println!("{}\n{}", *LOGO_PRINT, *INFORMATION);
 }

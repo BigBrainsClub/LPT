@@ -4,18 +4,16 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-regex = "1.6.0"
-serde = {version = "1.0.147", features = ["derive"]}
-serde_json = "1.0.128"
-colored = "1.9.4"
-url = "1.7.2"
-num_cpus = "1.13.1"
-chrono = "0.4.38"
-
-[profile.release]
-lto = true
-codegen-units = 1
-opt-level = "z"
-strip = true
-panic = "abort"
-debug  = false
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.138"
+num_cpus = "1.16.0"
+chrono = "0.4.39"
+url = "2.5.4"
+colored = "3.0.0"
+winapi = { version = "0.3", features = ["processthreadsapi", "psapi"] }
+rayon = "1.10.0"
+memchr = "2.7.4"
+smallvec = "1.13.2"
+mimalloc = { version = "0.1", default-features = false }
+maplit = "1.0"
+indicatif = "0.17.11"
