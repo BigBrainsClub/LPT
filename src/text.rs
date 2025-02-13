@@ -164,6 +164,9 @@ impl TextValidator {
     }
 
     fn checking_bad_words_in_credits(&self, filter_vector: &[Vec<u8>]) -> Option<bool> {
+        if filter_vector.is_empty() {
+            return Some(false)
+        }
         let login = self.login.as_deref()?;
         let password = self.password.as_deref()?;
         let mut buf = SmallVec::<[u8; 128]>::with_capacity(login.len() + password.len() + 1);
