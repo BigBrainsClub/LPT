@@ -39,6 +39,7 @@ pub fn init() -> std::io::Result<()> {
             .unwrap()
             .progress_chars("#>-"),
         );
+        pb_read.set_prefix(counter.format_multi_line(None, None, false));
         let mut buffer_process: Vec<Vec<u8>> = Vec::with_capacity(config.count_line_in_buffer as usize);
         for (chunk, len) in LoaderBody::new(file)? {
             let lines: Vec<Vec<u8>> = split_memchr(&chunk);

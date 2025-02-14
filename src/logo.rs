@@ -24,7 +24,7 @@ pub static INFORMATION: LazyLock<String> = LazyLock::new(|| {
 pub fn get_logo(a: &str, b: &str, c: &str, d: &str, e: &str, f: &str, t: &str, g: &str, i: &str, u: &str, y: &str) -> String {
     format!(
         "\n╔═══════════════════════════════════════════════════════════╗{}\n\
-           ║                                                           ║{}\n\
+           ║ LPT (Login Password from Text)                            ║{}\n\
            ║ Контакты и ссылки для фидбека:                            ║{}\n\
            ║                                                           ║{}\n\
            ║ [{}] => {}                            ║{}\n\
