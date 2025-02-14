@@ -26,21 +26,20 @@ pub fn is_valid_phone_number(number: &[u8]) -> bool {
                 }
                 b'(' => {
                     if open_parentheses > 0 {
-                        return false; // Только одни скобки допустимы
+                        return false;
                     }
                     open_parentheses += 1;
                 }
                 b')' => {
                     if open_parentheses == 0 {
-                        return false; // Закрывающая скобка без открывающей
+                        return false;
                     }
                     open_parentheses -= 1;
                 }
                 b'-' | b'.' | b' ' => {
-                    // Разделители допустимы
                 }
                 _ => {
-                    return false; // Недопустимый символ
+                    return false;
                 }
             }
             ptr = ptr.add(1);
