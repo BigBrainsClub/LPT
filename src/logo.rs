@@ -48,9 +48,9 @@ pub fn get_logo(a: &str, b: &str, c: &str, d: &str, e: &str, f: &str, t: &str, g
 
 pub static BIG_DICKS_TO: LazyLock<String> = LazyLock::new(|| {
     format!("
-    ┌──────────────────┐
-    │and big dick to{} │
-    └──────────────────┘", " √".green()).bright_black().to_string()
+    ┌───────────────────┐
+    │and big dicks to{} │
+    └───────────────────┘", " √".green()).bright_black().to_string()
 });
 
 pub fn logo(info: &str) -> String {
