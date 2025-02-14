@@ -5,6 +5,8 @@ use memchr::memmem;
 
 use indicatif::{ProgressBar, ProgressStyle};
 
+use crate::counter::Counters;
+use crate::system::clear_screen;
 use crate::system::get_peak_memory_usage;
 use crate::{
     config::Config, file_io::{BodySettings, LoaderBody, LoaderFiles},
@@ -13,26 +15,35 @@ use crate::{
 
 pub fn init() -> std::io::Result<()> {
     let config = Config::load_config()?;
-    let data = BodySettings::new()?;
+    BodySettings::load_init()?;
     let path = LoaderFiles::get_path()?;
+    let data = BodySettings::new()?;
     let files = LoaderFiles::new(&path)?;
     let threads = get_threads(&config);
     let mut writer = Writer::new();
-
+    let mut counter = Counters::default();
+    
     let start = Instant::now();
     for file in files {
-        let mut buffer_process: Vec<Vec<u8>> = Vec::with_capacity(config.count_line_in_buffer as usize);
+        if let Err(_) = LoaderFiles::init_file(&path) {
+            continue;
+        }
         let pb_read = ProgressBar::new(LoaderFiles::init_file(&path)?);
         pb_read.set_style(
-            
-            ProgressStyle::with_template(&format!("{}{}{}", "{spinner:.red} [Обработка файла ", file.to_string_lossy(), "]{wide_bar:.green}] {bytes}/{total_bytes} ({eta})"))
-                .unwrap()
-                .progress_chars("#>-"),
+            ProgressStyle::with_template(&format!(
+                "{}{}{}",
+                "{prefix}\n{spinner:.red} [Обработка файла ",
+                file.file_name().unwrap().to_string_lossy(),
+                "]{wide_bar:.green}] {bytes}/{total_bytes} ({eta})"
+            ))
+            .unwrap()
+            .progress_chars("#>-"),
         );
+        let mut buffer_process: Vec<Vec<u8>> = Vec::with_capacity(config.count_line_in_buffer as usize);
         for (chunk, len) in LoaderBody::new(file)? {
-            pb_read.inc(len as u64);
             let lines: Vec<Vec<u8>> = split_memchr(&chunk);
-
+            counter.all_count += lines.len();
+            pb_read.inc(len as u64);
             if buffer_process.len() < config.count_line_in_buffer as usize {
                 buffer_process.extend(lines);
             } else {
@@ -40,7 +51,8 @@ pub fn init() -> std::io::Result<()> {
                 buffer_process.clear();
     
                 let result = start_threading(sort, &config, threads, &data.filter);
-                writer.write(&result, &config)?;
+                writer.write(&result, &config, &mut counter)?;
+                pb_read.set_prefix(counter.format_multi_line(None, None, false));
             }
 
         }
@@ -49,16 +61,22 @@ pub fn init() -> std::io::Result<()> {
             buffer_process.clear();
 
             let result = start_threading(sort, &config, threads, &data.filter);
-            writer.write(&result, &config)?;
+            writer.write(&result, &config, &mut counter)?;
+            pb_read.set_prefix(counter.format_multi_line(None, None, false));
         }
     }
-
+    
     let duration = start.elapsed();
+    clear_screen()?;
     if config.debug {
-        println!("Время выполнения: {:?}", duration);
-        let peak_memory = get_peak_memory_usage();
-        println!("Пиковое потребление памяти: {} MB", peak_memory / (1024 * 1024));
+        let duration = format!("🚀 Время выполнения: {:?}", duration);
+        let used_memory = format!("🧠 Пиковое потребление памяти: {} MB", get_peak_memory_usage() / (1024 * 1024));
+        println!("{}", counter.format_multi_line(Some(duration), Some(used_memory), true))
+    } else {
+        println!("{}", counter.format_multi_line(None, None, false))
     }
+    println!("Финишировал 🥇");
+    std::io::stdin().read_line(&mut String::new())?;
     Ok(())
 }
 

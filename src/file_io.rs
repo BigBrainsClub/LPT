@@ -1,29 +1,21 @@
 use std::{
-    cell::RefCell,
-    collections::HashMap,
-    fs::{File, OpenOptions},
-    io::{BufRead, BufReader, BufWriter, Read, Write},
-    path::PathBuf,
-    ffi::OsStr,
+    fs::{File, OpenOptions}, io::{BufRead, BufReader, Read, Seek, SeekFrom, Write}, path::PathBuf
 };
-
 use smallvec::SmallVec;
 
-use crate::{logo::print_logo, system::clear_screen, FILTER_PATH, ZAPROS_PATH};
+use crate::{logo::{logo, INFORMATION}, system::clear_screen, FILTER_PATH, ZAPROS_PATH};
 
 
 pub struct BodySettings {
     pub zapros: Vec<Vec<u8>>,
-    pub filter: Vec<Vec<u8>>,
-    pub writers: HashMap<String, RefCell<BufWriter<File>>>,
+    pub filter: Vec<Vec<u8>>
 }
 
 impl BodySettings {
     pub fn new() -> std::io::Result<Self> {
         Ok(Self {
             zapros: Self::load_body(&ZAPROS_PATH)?,
-            filter: Self::load_body(&FILTER_PATH)?,
-            writers: HashMap::new(),
+            filter: Self::load_body(&FILTER_PATH)?
         })
     }
 
@@ -33,65 +25,79 @@ impl BodySettings {
             .lines()
             .filter_map(|line| line.ok().map(|l| l.into_bytes()))
             .collect::<Vec<_>>())
-    }    
+    }
+    pub fn load_init() -> std::io::Result<()> {
+        Self::init(&ZAPROS_PATH)?;
+        Self::init(&FILTER_PATH)?;
+        Ok(())
+    }
+    fn init(path: &PathBuf) -> std::io::Result<()> {
+        if !path.exists() {
+            File::create(path)?;
+        }
+        Ok(())
+    }
 }
-
+#[derive(Debug)]
 pub struct LoaderFiles {
     path: PathBuf,
-    files: Vec<PathBuf>,
+    files: Vec<PathBuf>
 }
 
 impl LoaderFiles {
     pub fn new(path: &PathBuf) -> std::io::Result<Self> {
         let mut loader = Self {
             path: path.clone(),
-            files: Vec::new(),
+            files: Vec::new()
         };
         loader.load_files_recursively(None)?;
         loader.files.reverse();
         Ok(loader)
     }
 
-    fn load_files_recursively(&mut self, dir: Option<PathBuf>) -> std::io::Result<()> {
-        let dir = dir.unwrap_or_else(|| self.path.clone());
-        if dir.is_file() {
-            self.files.push(dir);
-            return Ok(());
+    pub fn load_files_recursively(&mut self, path: Option<PathBuf>) -> std::io::Result<()> {
+        let path = path.unwrap_or_else(|| self.path.clone());
+
+        for entry in walkdir::WalkDir::new(&path)
+            .into_iter()
+            .filter_map(Result::ok)
+            .filter(|e| e.file_type().is_file() && e.path().extension() == Some(std::ffi::OsStr::new("txt")))
+        {
+            self.files.push(entry.path().to_path_buf());
         }
 
-        for entry in dir.read_dir()? {
-            let path = entry?.path();
-            if path.is_file() && path.extension() == Some(OsStr::new("txt")) {
-                self.files.push(path);
-            } else if path.is_dir() {
-                self.load_files_recursively(Some(path))?;
-            }
-        }
         Ok(())
     }
 
-    pub fn init_file(path: &PathBuf) -> std::io::Result<u64> {
-        File::open(path).and_then(|file| file.metadata().map(|meta| meta.len()))
-    }
 
+    pub fn init_file(path: &PathBuf) -> std::io::Result<u64> {
+        let mut file = File::open(path)?;
+        file.seek(SeekFrom::End(0))
+    }
     pub fn get_path() -> std::io::Result<PathBuf> {
+        let mut stdout = std::io::stdout();
+        let stdin = std::io::stdin();
         loop {
             let mut path = String::new();
             clear_screen()?;
-            print_logo();
+            println!("{}", logo(&INFORMATION));
 
             print!("[Path]=> ");
-            std::io::stdout().flush()?;
-            std::io::stdin().read_line(&mut path)?;
+            stdout.flush()?;
+            stdin.read_line(&mut path)?;
 
             path = path.trim()
                 .replace("& '", "")
                 .replace("'", "")
                 .replace("\"", "");
-
-            let link_path = PathBuf::from(&path);
-
+            
+            let link_path = if path == "." {
+                std::env::current_dir()?
+            } else {
+                PathBuf::from(&path)
+            };
             if link_path.exists() {
+                clear_screen()?;
                 return Ok(link_path);
             }
 
@@ -116,7 +122,7 @@ pub struct LoaderBody {
 
 impl LoaderBody {
     pub fn new(file: PathBuf) -> std::io::Result<Self> {
-        let file = File::open(file)?;
+        let file = File::open(&file).expect(&format!("Не удалось открыть файл: {:?}", &file));
         let reader = BufReader::new(file);
         Ok(Self {
             reader,

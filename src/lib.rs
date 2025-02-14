@@ -8,17 +8,18 @@ pub mod text;
 pub mod logo;
 pub mod reading;
 pub mod threading;
+pub mod counter;
 pub mod writer;
 
-pub const VERSION: &str = "1.1.0";
+pub const VERSION: &str = "1.1.2";
 pub const TELEGRAM: &str = "@M0l0d0st_vnutri";
 pub const FORUM: &str = "https://lolz.live/members/3060240";
-pub const GITHUB: &str = "https://github.com/M0l0d0st";
+pub const GITHUB: &str = "https://github.com/molodost-vnutri";
 pub const THREAD: &str = "https://lolz.live/threads/5830632/";
 
-pub static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from("./config.json"));
-pub static ZAPROS_PATH: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from("./zapros.txt"));
-pub static FILTER_PATH: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from("./filter.txt"));
+pub static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| std::env::current_dir().unwrap().join("./config.json"));
+pub static ZAPROS_PATH: LazyLock<PathBuf> = LazyLock::new(|| std::env::current_dir().unwrap().join("./zapros.txt"));
+pub static FILTER_PATH: LazyLock<PathBuf> = LazyLock::new(|| std::env::current_dir().unwrap().join("./filter.txt"));
 
 pub const END_FILES_ALL_PARSE: &str = "full.txt";
 

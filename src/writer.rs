@@ -4,7 +4,7 @@ use std::{
     io::{BufWriter, Write}
 };
 
-use crate::{config::Config, text::TextValidator, CURRENT_DIR, END_FILES_ALL_PARSE};
+use crate::{config::Config, counter::Counters, text::schema::{TextValidator, ValidationError}, CURRENT_DIR, END_FILES_ALL_PARSE};
 
 pub struct Writer {
     bufwriters: HashMap<String, BufWriter<File>>,
@@ -31,13 +31,37 @@ impl Writer {
         Ok(())
     }
 
-    pub fn write(&mut self, result: &HashMap<String, Vec<TextValidator>>, config: &Config) -> std::io::Result<()> {
+    pub fn write(&mut self, result: &HashMap<String, Vec<Result<TextValidator, ValidationError>>>, config: &Config, counter: &mut Counters) -> std::io::Result<()> {
         for (key, value) in result {
             for line in value {
-                if config.parse_full {
-                    self.check_exist(&format!("{key}_{}", END_FILES_ALL_PARSE), &line.full_line())?;
+                match line {
+                    Ok(validator) => {
+                        counter.valid += 1;
+                        if config.parse_full {
+                            self.check_exist(&format!("{key}_{}.txt", END_FILES_ALL_PARSE), &validator.full_line())?;
+                        }
+                        self.check_exist(&format!("{key}_{}.txt", validator.datatype), &validator.credits())?;
+                    },
+                    Err(e) => {
+                        match e {
+                            ValidationError::FilterError => {
+                                counter.filter_error += 1;
+                            },
+                            ValidationError::FindDataTypeError => {
+                                counter.data_error += 1;
+                            },
+                            ValidationError::LengthError => {
+                                counter.length_error += 1;
+                            },
+                            ValidationError::ParseError => {
+                                counter.parse_error += 1;
+                            },
+                            ValidationError::LpEqualError => {
+                                counter.lp_equal += 1;
+                            }
+                        }
+                    }
                 }
-                self.check_exist(&format!("{key}_{}", line.datatype), &line.credits())?;
             }
         }
 

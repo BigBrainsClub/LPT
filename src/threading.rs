@@ -1,18 +1,18 @@
 use std::collections::{HashMap, HashSet};
 use rayon::prelude::*;
 
-use crate::{config::Config, text::TextValidator};
+use crate::{config::Config, text::schema::{TextValidator, ValidationError}};
 
 pub fn start_threading(
     buffer: HashMap<String, Vec<Vec<u8>>>,
     config: &Config,
     threads: usize,
     filters: &[Vec<u8>],
-) -> HashMap<String, Vec<TextValidator>> {
+) -> HashMap<String, Vec<Result<TextValidator, ValidationError>>> {
     let shared_config = config.clone();
     let shared_filters = filters.to_vec();
     let split_data = split_data(buffer, threads);
-    let results: Vec<HashMap<String, Vec<TextValidator>>> = split_data
+    let results: Vec<HashMap<String, Vec<Result<TextValidator, ValidationError>>>> = split_data
         .into_par_iter()
         .map(|chunk| {
             let mut results = HashMap::new();
@@ -20,16 +20,14 @@ pub fn start_threading(
             for (tag, lines) in chunk {
                 let entry = results.entry(tag).or_insert_with(Vec::new);
                 for line in lines {
-                    if let Some(validator) = TextValidator::validate(&line, &shared_config, &shared_filters) {
-                        entry.push(validator);
-                    }
+                    entry.push(TextValidator::validate(&line, &shared_config, &shared_filters));
                 }
             }
             results
         })
         .collect();
-    results.into_iter().fold(HashMap::new(), |mut acc, res| {
-        merge_maps(&mut acc, &res);
+    results.into_iter().fold(HashMap::new(), |mut acc: HashMap<String, Vec<Result<TextValidator, ValidationError>>>, res: HashMap<String, Vec<Result<TextValidator, ValidationError>>>| {
+        merge_maps(&mut acc, res);
         acc
     })
 }
@@ -59,10 +57,10 @@ fn split_data(
     result
 }
 fn merge_maps(
-    target: &mut HashMap<String, Vec<TextValidator>>,
-    source: &HashMap<String, Vec<TextValidator>>,
+    target: &mut HashMap<String, Vec<Result<TextValidator, ValidationError>>>,
+    source: HashMap<String, Vec<Result<TextValidator, ValidationError>>>,
 ) {
     for (key, values) in source {
-        target.entry(key.clone()).or_insert_with(Vec::new).extend(values.iter().cloned());
+        target.entry(key.clone()).or_insert_with(Vec::new).extend(values);
     }
 }
