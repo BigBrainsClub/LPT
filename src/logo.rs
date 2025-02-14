@@ -24,7 +24,7 @@ pub static INFORMATION: LazyLock<String> = LazyLock::new(|| {
 pub fn get_logo(a: &str, b: &str, c: &str, d: &str, e: &str, f: &str, t: &str, g: &str, i: &str, u: &str, y: &str) -> String {
     format!(
         "\n╔═══════════════════════════════════════════════════════════╗{}\n\
-           ║ Сделал molodost vnutri для форума lolzteam                ║{}\n\
+           ║                                                           ║{}\n\
            ║ Контакты и ссылки для фидбека:                            ║{}\n\
            ║                                                           ║{}\n\
            ║ [{}] => {}                            ║{}\n\
@@ -48,9 +48,9 @@ pub fn get_logo(a: &str, b: &str, c: &str, d: &str, e: &str, f: &str, t: &str, g
 
 pub static BIG_DICKS_TO: LazyLock<String> = LazyLock::new(|| {
     format!("
-    ┌──────────────────┐
-    │and big dick to{} │
-    └──────────────────┘", " √".green()).bright_black().to_string()
+    ┌───────────────────┐
+    │and big dicks to{} │
+    └───────────────────┘", " √".green()).bright_black().to_string()
 });
 
 pub fn logo(info: &str) -> String {
