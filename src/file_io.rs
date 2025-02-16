@@ -1,36 +1,44 @@
 use std::{
-    fs::{File, OpenOptions}, io::{BufRead, BufReader, Read, Seek, SeekFrom, Write}, path::PathBuf
+    fs::{File, OpenOptions}, io::{BufRead, BufReader, Seek, SeekFrom, Write}, path::PathBuf
 };
+
 use smallvec::SmallVec;
 
 use crate::{logo::{logo, INFORMATION}, system::clear_screen, FILTER_PATH, ZAPROS_PATH};
 
 
 pub struct BodySettings {
-    pub zapros: Vec<Vec<u8>>,
-    pub filter: Vec<Vec<u8>>
+    pub zapros: SmallVec<[SmallVec<[u8; 16]>; 4]>,
+    pub filter: SmallVec<[SmallVec<[u8; 16]>; 4]>,
 }
 
 impl BodySettings {
     pub fn new() -> std::io::Result<Self> {
         Ok(Self {
             zapros: Self::load_body(&ZAPROS_PATH)?,
-            filter: Self::load_body(&FILTER_PATH)?
+            filter: Self::load_body(&FILTER_PATH)?,
         })
     }
 
-    fn load_body(path: &PathBuf) -> std::io::Result<Vec<Vec<u8>>> {
+    fn load_body(path: &PathBuf) -> std::io::Result<SmallVec<[SmallVec<[u8; 16]>; 4]>> {
         let file = OpenOptions::new().read(true).open(path)?;
-        Ok(BufReader::new(file)
-            .lines()
-            .filter_map(|line| line.ok().map(|l| l.into_bytes()))
-            .collect::<Vec<_>>())
+        let mut result = SmallVec::new();
+
+        for line in BufReader::new(file).lines().filter_map(|line| line.ok()) {
+            let mut small_vec = SmallVec::<[u8; 16]>::new();
+            small_vec.extend_from_slice(line.as_bytes());
+            result.push(small_vec);
+        }
+
+        Ok(result)
     }
+
     pub fn load_init() -> std::io::Result<()> {
         Self::init(&ZAPROS_PATH)?;
         Self::init(&FILTER_PATH)?;
         Ok(())
     }
+
     fn init(path: &PathBuf) -> std::io::Result<()> {
         if !path.exists() {
             File::create(path)?;
@@ -38,6 +46,7 @@ impl BodySettings {
         Ok(())
     }
 }
+
 #[derive(Debug)]
 pub struct LoaderFiles {
     path: PathBuf,
@@ -112,44 +121,5 @@ impl Iterator for LoaderFiles {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.files.pop()
-    }
-}
-
-pub struct LoaderBody {
-    reader: BufReader<File>,
-    buffer: SmallVec<[u8; 1024]>
-}
-
-impl LoaderBody {
-    pub fn new(file: PathBuf) -> std::io::Result<Self> {
-        let file = File::open(&file).expect(&format!("Не удалось открыть файл: {:?}", &file));
-        let reader = BufReader::new(file);
-        Ok(Self {
-            reader,
-            buffer: SmallVec::new()
-        })
-    }
-
-    fn load_body(&mut self) -> Option<(SmallVec<[u8; 1024]>, usize)> {
-        self.buffer.clear();
-        let mut temp_buffer = SmallVec::<[u8; 1024]>::new();
-        temp_buffer.resize(1024, 0);
-
-        match self.reader.read(temp_buffer.as_mut_slice()) {
-            Ok(0) => None,
-            Ok(n) => {
-                self.buffer.extend_from_slice(&temp_buffer[..n]);
-                Some((self.buffer.clone(), n))
-            }
-            Err(_) => None,
-        }
-    }
-}
-
-impl Iterator for LoaderBody {
-    type Item = (SmallVec<[u8; 1024]>, usize);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.load_body()
     }
 }

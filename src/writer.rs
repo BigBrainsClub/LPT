@@ -4,7 +4,9 @@ use std::{
     io::{BufWriter, Write}
 };
 
-use crate::{config::Config, counter::Counters, text::schema::{TextValidator, ValidationError}, CURRENT_DIR, END_FILES_ALL_PARSE};
+use vulp::{ResultVULP, ValidationError};
+
+use crate::{config::Config, counter::Counters, CURRENT_DIR, END_FILES_ALL_PARSE};
 
 pub struct Writer {
     bufwriters: HashMap<String, BufWriter<File>>,
@@ -31,16 +33,16 @@ impl Writer {
         Ok(())
     }
 
-    pub fn write(&mut self, result: &HashMap<String, Vec<Result<TextValidator, ValidationError>>>, config: &Config, counter: &mut Counters) -> std::io::Result<()> {
+    pub fn write(&mut self, result: &HashMap<String, Vec<Result<ResultVULP, ValidationError>>>, config: &Config, counter: &mut Counters) -> std::io::Result<()> {
         for (key, value) in result {
             for line in value {
                 match line {
                     Ok(validator) => {
                         counter.valid += 1;
                         if config.parse_full {
-                            self.check_exist(&format!("{key}_{}.txt", END_FILES_ALL_PARSE), &validator.full_line())?;
+                            self.check_exist(&format!("{key}_{}.txt", END_FILES_ALL_PARSE), &validator.full_line)?;
                         }
-                        self.check_exist(&format!("{key}_{}.txt", validator.datatype), &validator.credits())?;
+                        self.check_exist(&format!("{key}_{}.txt", validator.datatype), &validator.credits)?;
                     },
                     Err(e) => {
                         match e {
@@ -56,7 +58,7 @@ impl Writer {
                             ValidationError::ParseError => {
                                 counter.parse_error += 1;
                             },
-                            ValidationError::LpEqualError => {
+                            ValidationError::EqualError => {
                                 counter.lp_equal += 1;
                             }
                         }

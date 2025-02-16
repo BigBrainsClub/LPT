@@ -1,15 +1,17 @@
 use std::collections::HashMap;
 use std::time::Instant;
+
 use memchr::memchr;
 use memchr::memmem;
-
 use indicatif::{ProgressBar, ProgressStyle};
+use reader_vlf::Reader;
+use smallvec::SmallVec;
 
 use crate::counter::Counters;
 use crate::system::clear_screen;
 use crate::system::get_peak_memory_usage;
 use crate::{
-    config::Config, file_io::{BodySettings, LoaderBody, LoaderFiles},
+    config::Config, file_io::{BodySettings, LoaderFiles},
     system::get_threads, threading::start_threading, writer::Writer
 };
 
@@ -41,7 +43,7 @@ pub fn init() -> std::io::Result<()> {
         );
         pb_read.set_prefix(counter.format_multi_line(None, None, false));
         let mut buffer_process: Vec<Vec<u8>> = Vec::with_capacity(config.count_line_in_buffer as usize);
-        for (chunk, len) in LoaderBody::new(file)? {
+        for (chunk, len) in Reader::new(file)? {
             let lines: Vec<Vec<u8>> = split_memchr(&chunk);
             counter.all_count += lines.len();
             pb_read.inc(len as u64);
@@ -108,7 +110,7 @@ fn split_memchr(input: &[u8]) -> Vec<Vec<u8>> {
 fn sorting_lines(
     lines: &[Vec<u8>],
     zapros: bool,
-    zapros_vector: &[Vec<u8>]
+    zapros_vector: &SmallVec<[SmallVec<[u8; 16]>; 4]>
 ) -> HashMap<String, Vec<Vec<u8>>> {
     if !zapros {
         return HashMap::from([("default".to_string(), lines.to_vec())]);

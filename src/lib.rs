@@ -4,14 +4,13 @@ use chrono::{Datelike, Local, Timelike};
 pub mod config;
 pub mod system;
 pub mod file_io;
-pub mod text;
 pub mod logo;
 pub mod reading;
 pub mod threading;
 pub mod counter;
 pub mod writer;
 
-pub const VERSION: &str = "1.1.2";
+pub const VERSION: &str = "1.1.3";
 pub const TELEGRAM: &str = "@M0l0d0st_vnutri";
 pub const FORUM: &str = "https://lolz.live/members/3060240";
 pub const GITHUB: &str = "https://github.com/molodost-vnutri";

@@ -13,11 +13,14 @@ colored = "3.0.0"
 winapi = { version = "0.3", features = ["processthreadsapi", "psapi"] }
 rayon = "1.10.0"
 memchr = "2.7.4"
-smallvec = "1.13.2"
+smallvec = "1.14.0"
 mimalloc = { version = "0.1", default-features = false }
 maplit = "1.0"
 indicatif = "0.17.11"
 walkdir = "2.5.0"
+vc = { git = "https://github.com/BigBrainsClub/VC" }
+reader_vlf = { git = "https://github.com/BigBrainsClub/RVLF" }
+vulp = { git = "https://github.com/BigBrainsClub/VULP" }
 
 [profile.release]
 opt-level = 3
