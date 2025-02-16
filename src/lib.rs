@@ -13,7 +13,7 @@ pub mod writer;
 pub const VERSION: &str = "1.1.3";
 pub const TELEGRAM: &str = "@M0l0d0st_vnutri";
 pub const FORUM: &str = "https://lolz.live/members/3060240";
-pub const GITHUB: &str = "https://github.com/molodost-vnutri";
+pub const GITHUB: &str = "https://github.com/BigBrainsClub/";
 pub const THREAD: &str = "https://lolz.live/threads/5830632/";
 
 pub static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| std::env::current_dir().unwrap().join("./config.json"));
