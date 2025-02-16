@@ -54,7 +54,7 @@ impl Config {
             login_to_lower_case: true,
             autothreads: true,
             threads: 1,
-            count_line_in_buffer: 500_000,
+            count_line_in_buffer: 5000,
             debug: false
         }
     }
