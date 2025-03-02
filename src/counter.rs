@@ -1,4 +1,4 @@
-use crate::logo::{logo, get_logo};
+use crate::LOGO;
 
 #[derive(Default)]
 pub struct Counters {
@@ -13,19 +13,25 @@ pub struct Counters {
 
 impl Counters {
     pub fn format_multi_line(&self, duration: Option<String>, used_memory: Option<String>, debug: bool) -> String {
-        let logo_str = get_logo(
-                "    ═════════════════════INFO════════════════════",
-                &format!("    📊 Всего строк:                {}", self.all_count),
-                &format!("    ❌ Ошибка валидации длины:     {}", self.length_error),
-                &format!("    🔑 Ошибка валидации lp:        {}", self.data_error),
-                &format!("    ⚠️ Ошибка парса строки:        {}", self.parse_error),
-                &format!("    🚫 Ошибка валидации фильтрами: {}", self.filter_error),
-                &format!("    🔁 Ошибка одинаковые log_pass: {}", self.lp_equal),
-                &format!("    ✅ Валидных строк:             {}", self.valid),
-                if debug {"    ══════════════════DEBUG MODE═════════════════"} else {""},
-                &format!("    {}", duration.unwrap_or(String::new())),
-                &format!("    {}", used_memory.unwrap_or(String::new()))
-            );
-        logo(&logo_str)
+        let mut logo_str  = vec![
+                ("═════════════════════INFO════════════════════", None),
+                ("📊 Всего строк", Some(self.all_count)),
+                ("❌ Ошибка валидации длины", Some(self.length_error)),
+                ("🔑 Ошибка валидации lp", Some(self.data_error)),
+                ("⚠️ Ошибка парса строки", Some(self.parse_error)),
+                ("🚫 Ошибка валидации фильтрами", Some(self.filter_error)),
+                ("🔁 Ошибка одинаковые log_pass", Some(self.lp_equal)),
+                ("✅ Валидных строк", Some(self.valid)),      
+        ];
+        if debug {
+            logo_str.extend([
+                ("══════════════════DEBUG MODE═════════════════", None),
+                (duration.unwrap_or(String::new().leak().to_string()).leak(), None),
+                (used_memory.unwrap_or(String::new().leak().to_string()).leak(), None)
+            ]);
+        }
+        let mut logo = (*LOGO).clone();
+        logo.extra_info.extend(logo_str);
+        logo.render()
     }
 }

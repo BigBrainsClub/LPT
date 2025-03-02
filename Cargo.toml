@@ -21,6 +21,7 @@ walkdir = "2.5.0"
 vc = { git = "https://github.com/BigBrainsClub/VC" }
 reader_vlf = { git = "https://github.com/BigBrainsClub/RVLF" }
 vulp = { git = "https://github.com/BigBrainsClub/VULP" }
+big_brains_club_logo = { git = "https://github.com/BigBrainsClub/Big_brains_club_logo" }
 
 [profile.release]
 opt-level = 3
