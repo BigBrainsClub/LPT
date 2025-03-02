@@ -17,7 +17,7 @@ const VERSION: &str = "1.1.4";
 const TELEGRAM: &str = "@M0l0d0st_vnutri";
 const FORUM: &str = "https://lolz.live/members/3060240";
 const GITHUB: &str = "https://github.com/BigBrainsClub/";
-const GITHUB_MAIN: &str = "90547216+BigBrainsClub@users.noreply.github.com";
+const GITHUB_MAIL: &str = "90547216+BigBrainsClub@users.noreply.github.com";
 const THREAD: &str = "https://lolz.live/threads/5830632/";
 
 static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| std::env::current_dir().unwrap().join("./config.json"));
@@ -52,7 +52,7 @@ static LOGO: LazyLock<LogoBuilder> = LazyLock::new(|| {
             ("Ссылка на профиль".green().to_string().leak(), Some(FORUM)),
             ("Тема на форуме".green().to_string().leak(), Some(THREAD)),
             ("Github".bright_black().to_string().leak(), Some(GITHUB)),
-            ("Почта Github".bright_black().to_string().leak(), Some(GITHUB_MAIN)),
+            ("Почта Github".bright_black().to_string().leak(), Some(GITHUB_MAIL)),
             ("Версия".bright_green().to_string().leak(), Some(VERSION))
         ],
         vec![],
