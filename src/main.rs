@@ -1,7 +1,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use urllogpass::init;
+use lpt::init;
 
 
 fn main() -> std::io::Result<()> {
