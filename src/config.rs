@@ -35,7 +35,30 @@ impl AsRef<Config> for Config {
 }
 
 impl Config {
-    pub fn new() -> Self {
+    pub fn get_string_config(&self) -> std::io::Result<String> {
+        serde_json::to_string_pretty(self).map_err(|e| e.into())
+    }
+
+    pub fn load_config() -> std::io::Result<Self> {
+        let path = CONFIG_PATH.to_path_buf();
+        if path.is_file() {
+            let mut file = File::open(&path)?;
+            let mut json_data = String::new();
+            file.read_to_string(&mut json_data)?;
+            return serde_json::from_str(&json_data).map_err(|e| e.into());
+        }
+        let default_config = Self::default();
+        let mut config_file = File::create(&path)?;
+        config_file.write_all(default_config.get_string_config()?.as_bytes())?;
+
+        println!("Конфигурация создана. Настройте файл {} и нажмите Enter...", path.display());
+        stdin().read_line(&mut String::new())?;
+        Self::load_config()
+    }
+}
+
+impl Default for Config {
+    fn default() -> Self {
         Self {
             parse_zapros: false,
             parse_email: true,
@@ -57,26 +80,5 @@ impl Config {
             count_line_in_buffer: 5000,
             debug: false
         }
-    }
-
-    pub fn get_string_config(&self) -> std::io::Result<String> {
-        serde_json::to_string_pretty(self).map_err(|e| e.into())
-    }
-
-    pub fn load_config() -> std::io::Result<Self> {
-        let path = CONFIG_PATH.to_path_buf();
-        if path.is_file() {
-            let mut file = File::open(&path)?;
-            let mut json_data = String::new();
-            file.read_to_string(&mut json_data)?;
-            return serde_json::from_str(&json_data).map_err(|e| e.into());
-        }
-        let default_config = Self::new();
-        let mut config_file = File::create(&path)?;
-        config_file.write_all(default_config.get_string_config()?.as_bytes())?;
-
-        println!("Конфигурация создана. Настройте файл {} и нажмите Enter...", path.display());
-        stdin().read_line(&mut String::new())?;
-        Self::load_config()
     }
 }
