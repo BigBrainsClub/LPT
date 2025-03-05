@@ -1,6 +1,6 @@
 [package]
 name = "lpt"
-version = "1.1.4"
+version = "1.1.5"
 authors = ["BigBrainsClub <90547216+bigbrainsclub@users.noreply.github.com>"]
 description = "Программное обеспечение для работы с файлами ULP"
 license = "BSD-2-Clause"
