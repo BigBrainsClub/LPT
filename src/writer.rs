@@ -4,9 +4,10 @@ use std::{
     io::{BufWriter, Write}
 };
 
+use big_brains_club_logo::LogoBuilder;
 use vulp::{ResultVULP, ValidationError};
 
-use crate::{config::Config, counter::Counters, CURRENT_DIR, END_FILES_ALL_PARSE};
+use crate::{config::Config, CURRENT_DIR, END_FILES_ALL_PARSE, ERROR_FILTER_STR, ERROR_LENGTH_STR, ERROR_LP_EQ_STR, ERROR_LP_STR, ERROR_PARSE_STR, VALID_COUNT_STR};
 
 pub struct Writer {
     bufwriters: HashMap<String, BufWriter<File>>,
@@ -33,12 +34,12 @@ impl Writer {
         Ok(())
     }
 
-    pub fn write(&mut self, result: &HashMap<String, Vec<Result<ResultVULP, ValidationError>>>, config: &Config, counter: &mut Counters) -> std::io::Result<()> {
+    pub fn write(&mut self, result: &HashMap<String, Vec<Result<ResultVULP, ValidationError>>>, config: &Config, counter: &mut LogoBuilder) -> std::io::Result<()> {
         for (key, value) in result {
             for line in value {
                 match line {
                     Ok(validator) => {
-                        counter.valid += 1;
+                        counter.entry_extra(VALID_COUNT_STR, Some(1));
                         if config.parse_full {
                             self.check_exist(&format!("{key}_{}.txt", END_FILES_ALL_PARSE), &validator.full_line)?;
                         }
@@ -47,19 +48,19 @@ impl Writer {
                     Err(e) => {
                         match e {
                             ValidationError::FilterError => {
-                                counter.filter_error += 1;
+                                counter.entry_extra(ERROR_FILTER_STR, Some(1));
                             },
                             ValidationError::FindDataTypeError => {
-                                counter.data_error += 1;
+                                counter.entry_extra(ERROR_LP_STR, Some(1));
                             },
                             ValidationError::LengthError => {
-                                counter.length_error += 1;
+                                counter.entry_extra(ERROR_LENGTH_STR, Some(1));
                             },
                             ValidationError::ParseError => {
-                                counter.parse_error += 1;
+                                counter.entry_extra(ERROR_PARSE_STR, Some(1));
                             },
                             ValidationError::EqualError => {
-                                counter.lp_equal += 1;
+                                counter.entry_extra(ERROR_LP_EQ_STR, Some(1));
                             }
                         }
                     }

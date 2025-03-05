@@ -4,7 +4,7 @@ use std::{
 
 use smallvec::SmallVec;
 
-use crate::{system::clear_screen, FILTER_PATH, LOGO_READY, ZAPROS_PATH};
+use crate::{system::clear_screen, FILTER_PATH, RENDERED_LOGO, ZAPROS_PATH};
 
 
 pub struct BodySettings {
@@ -89,7 +89,7 @@ impl LoaderFiles {
         loop {
             let mut path = String::new();
             clear_screen()?;
-            println!("{}", *LOGO_READY);
+            println!("{}", *RENDERED_LOGO);
 
             print!("[Path]=> ");
             stdout.flush()?;

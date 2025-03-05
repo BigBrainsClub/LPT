@@ -1,15 +1,29 @@
 use std::collections::HashMap;
 use std::time::Instant;
 
+use aho_corasick::AhoCorasick;
 use memchr::memchr;
-use memchr::memmem;
 use indicatif::{ProgressBar, ProgressStyle};
+use rayon::iter::IntoParallelRefIterator;
+use rayon::iter::ParallelIterator;
 use reader_vlf::Reader;
 use smallvec::SmallVec;
 
-use crate::counter::Counters;
 use crate::system::clear_screen;
 use crate::system::get_peak_memory_usage;
+use crate::ALL_COUNT_STR;
+use crate::DEBUG_STR;
+use crate::DURATION_STR;
+use crate::ERROR_FILTER_STR;
+use crate::ERROR_LENGTH_STR;
+use crate::ERROR_LP_EQ_STR;
+use crate::ERROR_LP_STR;
+use crate::ERROR_PARSE_STR;
+use crate::FINISH_STR;
+use crate::INFO_STR;
+use crate::LOGO;
+use crate::PEEK_MEMORY_STR;
+use crate::VALID_COUNT_STR;
 use crate::{
     config::Config, file_io::{BodySettings, LoaderFiles},
     system::get_threads, threading::start_threading, writer::Writer
@@ -23,7 +37,16 @@ pub fn init() -> std::io::Result<()> {
     let files = LoaderFiles::new(&path)?;
     let threads = get_threads(&config);
     let mut writer = Writer::new();
-    let mut counter = Counters::default();
+    let mut logo_counter = LOGO.clone();
+    logo_counter
+        .entry_extra(INFO_STR, None)
+        .entry_extra(ALL_COUNT_STR, Some(0))
+        .entry_extra(ERROR_LENGTH_STR, Some(0))
+        .entry_extra(ERROR_LP_STR, Some(0))
+        .entry_extra(ERROR_PARSE_STR, Some(0))
+        .entry_extra(ERROR_FILTER_STR, Some(0))
+        .entry_extra(ERROR_LP_EQ_STR, Some(0))
+        .entry_extra(VALID_COUNT_STR, Some(0));
     
     let start = Instant::now();
     for file in files {
@@ -41,11 +64,11 @@ pub fn init() -> std::io::Result<()> {
             .unwrap()
             .progress_chars("#>-"),
         );
-        pb_read.set_prefix(counter.format_multi_line(None, None, false));
+        pb_read.set_prefix(logo_counter.render());
         let mut buffer_process: Vec<Vec<u8>> = Vec::with_capacity(config.count_line_in_buffer as usize);
         for (chunk, len) in Reader::new(file)? {
             let lines: Vec<Vec<u8>> = split_memchr(&chunk);
-            counter.all_count += lines.len();
+            logo_counter.entry_extra(ALL_COUNT_STR, Some(lines.len()));
             pb_read.inc(len as u64);
             if buffer_process.len() < config.count_line_in_buffer as usize {
                 buffer_process.extend(lines);
@@ -54,8 +77,8 @@ pub fn init() -> std::io::Result<()> {
                 buffer_process.clear();
     
                 let result = start_threading(sort, &config, threads, &data.filter);
-                writer.write(&result, &config, &mut counter)?;
-                pb_read.set_prefix(counter.format_multi_line(None, None, false));
+                writer.write(&result, &config, &mut logo_counter)?;
+                pb_read.set_prefix(logo_counter.render());
             }
 
         }
@@ -64,21 +87,23 @@ pub fn init() -> std::io::Result<()> {
             buffer_process.clear();
 
             let result = start_threading(sort, &config, threads, &data.filter);
-            writer.write(&result, &config, &mut counter)?;
-            pb_read.set_prefix(counter.format_multi_line(None, None, false));
+            writer.write(&result, &config, &mut logo_counter)?;
+            pb_read.set_prefix(logo_counter.render());
         }
     }
     
     let duration = start.elapsed();
     clear_screen()?;
     if config.debug {
-        let duration = format!("🚀 Время выполнения: {:?}", duration);
-        let used_memory = format!("🧠 Пиковое потребление памяти: {} MB", get_peak_memory_usage() / (1024 * 1024));
-        println!("{}", counter.format_multi_line(Some(duration), Some(used_memory), true))
+        logo_counter
+            .entry_extra(DEBUG_STR, None)
+            .entry_extra(&format!("{} {:?}", DURATION_STR, duration), None)
+            .entry_extra(&format!("{} {} MB", PEEK_MEMORY_STR, get_peak_memory_usage() / (1024 * 1024)), None);
+        println!("{}", logo_counter.render());
     } else {
-        println!("{}", counter.format_multi_line(None, None, false))
+        println!("{}", logo_counter.render())
     }
-    println!("Финишировал 🥇");
+    println!("{}", FINISH_STR);
     std::io::stdin().read_line(&mut String::new())?;
     Ok(())
 }
@@ -110,30 +135,39 @@ fn split_memchr(input: &[u8]) -> Vec<Vec<u8>> {
 fn sorting_lines(
     lines: &[Vec<u8>],
     zapros: bool,
-    zapros_vector: &SmallVec<[SmallVec<[u8; 16]>; 4]>
+    zapros_vector: &SmallVec<[SmallVec<[u8; 16]>; 4]>,
 ) -> HashMap<String, Vec<Vec<u8>>> {
     if !zapros {
         return HashMap::from([("default".to_string(), lines.to_vec())]);
     }
 
-    let mut result = HashMap::new();
+    let patterns: Vec<String> = zapros_vector
+        .iter()
+        .filter_map(|v| std::str::from_utf8(v).ok().map(|s| s.to_lowercase()))
+        .collect();
 
-    for zapros in zapros_vector {
-        let zapros_str = match std::str::from_utf8(zapros) {
-            Ok(s) => s.to_lowercase().to_string(),
-            Err(_) => continue,
-        };
-        let finder = memmem::Finder::new(zapros);
+    let ac = AhoCorasick::new(&patterns).unwrap();
 
-        let matched_lines: Vec<Vec<u8>> = lines.iter()
-            .filter(|line| finder.find(&line.to_ascii_lowercase()).is_some())
-            .cloned()
-            .collect();
-
-        if !matched_lines.is_empty() {
-            result.insert(zapros_str, matched_lines);
-        }
-    }
-
-    result
+    lines
+        .par_iter()
+        .fold(
+            || HashMap::new(),
+            |mut acc, line| {
+                let lower_line = line.to_ascii_lowercase();
+                for mat in ac.find_iter(&lower_line) {
+                    let pattern = &patterns[mat.pattern()];
+                    acc.entry(pattern.clone()).or_insert_with(Vec::new).push(line.clone());
+                }
+                acc
+            },
+        )
+        .reduce(
+            || HashMap::new(),
+            |mut acc, map| {
+                for (key, value) in map {
+                    acc.entry(key).or_insert_with(Vec::new).extend(value);
+                }
+                acc
+            },
+        )
 }
