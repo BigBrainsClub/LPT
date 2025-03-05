@@ -33,7 +33,7 @@ cargo build --release
 Бинарник: `target/release/vulp`
 
 ### Готовые сборки
-[Скачать последний релиз](https://github.com/BigBrainsClub/VULP/releases)
+[Скачать последний релиз](https://github.com/BigBrainsClub/LPT/releases)
 
 ## ⚙️ Конфигурация
 При первом запуске создаются:
