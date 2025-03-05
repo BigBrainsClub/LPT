@@ -26,8 +26,8 @@
 ## 🛠 Установка
 ### Сборка из исходников
 ```bash
-git clone https://github.com/BigBrainsClub/VULP
-cd VULP
+git clone https://github.com/BigBrainsClub/LPT
+cd LPT
 cargo build --release
 ```
 Бинарник: `target/release/vulp`
