@@ -31,6 +31,7 @@ impl Writer {
 
         writer.write_all(line)?;
         writer.write_all(b"\n")?;
+        writer.flush()?;
         Ok(())
     }
 
